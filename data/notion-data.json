@@ -1,10 +1,10 @@
 {
-  "syncedAt": "2026-02-18T19:38:11.423Z",
+  "syncedAt": "2026-02-18T21:24:15.348Z",
   "habits": {
     "error": "Could not find database with ID: 1fb2f614-ebd1-816d-a771-e55a00e68dc2. Make sure the relevant pages and databases are shared with your integration."
   },
   "journal": {
-    "error": "Could not find database with ID: 1f02f614-ebd1-8082-b089-e131950e0780. Make sure the relevant pages and databases are shared with your integration."
+    "error": "Could not find database with ID: 30b2f614-ebd1-8034-a9c0-e797302cd54d. Make sure the relevant pages and databases are shared with your integration."
   },
   "skincare": {
     "error": "Could not find database with ID: 3072f614-ebd1-8004-9b93-f56345b2960f. Make sure the relevant pages and databases are shared with your integration."
