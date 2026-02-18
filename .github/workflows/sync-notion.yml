@@ -1,0 +1,42 @@
+name: Sync Notion Data
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'   # Every 15 minutes
+  workflow_dispatch:           # Allow manual trigger from GitHub UI
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write          # Needed to push data.json back to repo
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: scripts
+
+      - name: Fetch Notion data
+        env:
+          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
+          DB_HABITS:      ${{ secrets.DB_HABITS }}
+          DB_JOURNAL:     ${{ secrets.DB_JOURNAL }}
+          DB_SKINCARE:    ${{ secrets.DB_SKINCARE }}
+          DB_TREATMENTS:  ${{ secrets.DB_TREATMENTS }}
+        run: node scripts/fetch-notion.js
+
+      - name: Commit & push updated data
+        run: |
+          git config user.name  "Notion Sync Bot"
+          git config user.email "sync@life-planner"
+          git add data/notion-data.json
+          git diff --staged --quiet || git commit -m "sync: $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git push
