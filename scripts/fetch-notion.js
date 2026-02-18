@@ -59,7 +59,6 @@ async function fetchHabits() {
     );
 
     if (pages.length === 0) {
-      // No entry for today — return schema so the UI knows what habits exist
       const schema = await notion.databases.retrieve({ database_id: process.env.DB_HABITS });
       const checkboxProps = Object.entries(schema.properties)
         .filter(([, v]) => v.type === 'checkbox')
@@ -84,15 +83,20 @@ async function fetchJournal() {
     const pages = await queryAll(
       process.env.DB_JOURNAL,
       undefined,
-      [{ property: 'Created', direction: 'descending' }]
+      [{ property: 'Date', direction: 'descending' }]
     );
 
-    const entries = pages.slice(0, 20).map(page => ({
+    const entries = pages.slice(0, 30).map(page => ({
       id: page.id,
-      date: getProperty(page, 'Date') || getProperty(page, 'Created') || page.created_time,
-      title: getProperty(page, 'Name') || getProperty(page, 'Title') || 'Untitled',
-      mood: getProperty(page, 'Mood') || getProperty(page, 'Emoji') || '✨',
+      date: getProperty(page, 'Date') || page.created_time,
+      mood: getProperty(page, 'Mood') || null,
       tags: getProperty(page, 'Tags') || [],
+      sleepQuality: getProperty(page, 'Sleep Quality') || null,
+      sleepHours: getProperty(page, 'Sleep Hours') || null,
+      intentions: getProperty(page, 'Intentions') || '',
+      highlight: getProperty(page, 'Highlight') || '',
+      gratitude: getProperty(page, 'Gratitude') || '',
+      energyLevel: getProperty(page, 'Energy Level') || null,
       url: page.url,
     }));
 
@@ -157,7 +161,7 @@ async function fetchTreatments() {
 // ── Main ─────────────────────────────────────────────────────────────────────
 
 async function main() {
-  console.log('🔄 Fetching Notion data…');
+  console.log('Fetching Notion data...');
 
   const [habits, journal, skincare, treatments] = await Promise.all([
     fetchHabits(),
@@ -176,13 +180,12 @@ async function main() {
 
   const outPath = path.join(__dirname, '..', 'data', 'notion-data.json');
   fs.writeFileSync(outPath, JSON.stringify(output, null, 2));
-  console.log(`✅ Saved to ${outPath}`);
+  console.log('Saved to ' + outPath);
 
-  // Print summary
-  if (!habits.error) console.log(`   Habits: today's page ${habits.today ? 'found' : 'not yet created'}`);
-  if (!journal.error) console.log(`   Journal: ${journal.entries?.length ?? 0} entries`);
-  if (!skincare.error) console.log(`   Skincare: ${skincare.products?.length ?? 0} products`);
-  if (!treatments.error) console.log(`   Treatments: ${treatments.treatments?.length ?? 0} sessions`);
+  if (!habits.error) console.log('Habits: today page ' + (habits.today ? 'found' : 'not yet created'));
+  if (!journal.error) console.log('Journal: ' + (journal.entries?.length ?? 0) + ' entries');
+  if (!skincare.error) console.log('Skincare: ' + (skincare.products?.length ?? 0) + ' products');
+  if (!treatments.error) console.log('Treatments: ' + (treatments.treatments?.length ?? 0) + ' sessions');
 }
 
 main().catch(err => {
