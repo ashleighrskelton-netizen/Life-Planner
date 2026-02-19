@@ -1,9 +1,0 @@
-{
-  "name": "life-planner-sync",
-  "version": "1.0.0",
-  "description": "Notion sync script for Life Planner",
-  "main": "fetch-notion.js",
-  "dependencies": {
-    "@notionhq/client": "^2.2.15"
-  }
-}
