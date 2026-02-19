@@ -447,13 +447,26 @@ function renderHabits() {
   document.getElementById('habit-progress-pct').textContent = pct + '%';
 }
 
-function toggleHabit(id) {
+async function toggleHabit(id) {
   const h = S.habits.find(x => x.id === id);
   if (!h) return;
   h.checked = !h.checked;
   renderHabits();
   renderTrackerStats();
   toast(h.checked ? '✓ ' + h.name + ' logged' : h.name + ' unchecked');
+  try {
+    await fetch('https://life-planner-notion.ashleighrskelton.workers.dev/habit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pageId: S.data?.habits?.pageId || null,
+        habitName: h.name,
+        checked: h.checked,
+      }),
+    });
+  } catch(e) {
+    console.warn('Habit sync failed:', e.message);
+  }
 }
 
 function renderSkincareQuick() {
@@ -518,10 +531,27 @@ function renderJournal() {
   }
 }
 
-function saveEntry(fieldId) {
+async function saveEntry(fieldId) {
   const content = document.getElementById(fieldId).value.trim();
   if (!content) { toast('Write something first ✍️'); return; }
-  toast('📝 Entry ready — open Notion to save');
+  const mood = fieldId === 'j1' ? S.mood : S.mood2;
+  toast('Saving to Notion…');
+  try {
+    const resp = await fetch('https://life-planner-notion.ashleighrskelton.workers.dev/journal', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mood, content }),
+    });
+    const data = await resp.json();
+    if (data.ok) {
+      document.getElementById(fieldId).value = '';
+      toast('✅ Saved to Notion!');
+    } else {
+      toast('❌ Error: ' + data.error);
+    }
+  } catch(e) {
+    toast('❌ Could not reach Worker');
+  }
 }
 
 function pickMood(btn, m) {
@@ -646,6 +676,19 @@ async function getInsight() {
   document.getElementById('ai-thinking').style.display = 'none';
   document.getElementById('ai-text').textContent = insight;
   document.getElementById('ai-text').classList.add('visible');
+  try {
+    await fetch('https://life-planner-notion.ashleighrskelton.workers.dev/insight', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        insight,
+        habitsDone: done,
+        mood: S.mood,
+      }),
+    });
+  } catch(e) {
+    console.warn('Insight sync failed:', e.message);
+  }
 }
 
 function switchView(v, btn) {
